@@ -42,8 +42,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[9999] p-3 sm:p-4 animate-fadeIn overflow-y-auto">
-      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 border-2 border-gray-200 dark:border-gray-700 transform transition-all my-auto animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[9999] p-3 sm:p-4 lg:p-8 animate-fadeIn overflow-y-auto">
+      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 lg:p-10 border-2 border-gray-200 dark:border-gray-700 transform transition-all my-auto animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
