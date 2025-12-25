@@ -76,3 +76,21 @@ input[type="range"]::-moz-range-thumb {
 button:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
+
+/* Hide scrollbar for mobile navigation */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 640px) {
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+

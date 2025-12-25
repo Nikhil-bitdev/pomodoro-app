@@ -44,14 +44,14 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   return (
     <div className="flex flex-col items-center justify-center">
       {/* Session Type Label */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-400 dark:to-pink-400">
+      <div className="mb-4 sm:mb-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-400 dark:to-pink-400 text-center">
           {getSessionLabel()}
         </h2>
       </div>
 
       {/* Circular Progress */}
-      <div className="relative w-96 h-96">
+      <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96">
         {/* Background Circle */}
         <svg className="absolute inset-0 transform -rotate-90 drop-shadow-2xl" viewBox="0 0 384 384">
           <circle
@@ -87,7 +87,7 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
 
         {/* Timer Text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 font-mono tracking-tight">
+          <div className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 font-mono tracking-tight">
             {time}
           </div>
         </div>
