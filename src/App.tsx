@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Timer, CheckSquare, BarChart3, Settings, Bell } from 'lucide-react';
-import { usePomodoro } from './hooks/usePomodoro';
+import { usePomodoro } from './hooks/usePomodoro.ts';
 import { useTasks } from './hooks/useTasks';
 import { TimerDisplay } from './components/timer/TimerDisplay';
 import { TimerControls } from './components/timer/TimerControls';

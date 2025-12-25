@@ -1,427 +1,245 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, Session, updateDailyStats } from '../lib/database';
-import {
-  showWorkCompleteNotification,
-  showBreakCompleteNotification,
-  showLongBreakCompleteNotification,
-  playNotificationSound,
-  requestNotificationPermission,
-  showDailyGoalAchievedNotification
-} from '../lib/notifications';
-import {
-  enableFocusMode,
-  disableFocusMode,
-  updatePageTitle,
-  resetPageTitle,
-  updateFavicon
-} from '../lib/focusMode';
-import { formatTime, getTodayKey } from '../utils/dateHelpers';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { db, SessionType } from '../lib/database';
+import { useSettings } from './useSettings';
+import { showNotification } from '../lib/notifications';
+import { enableFocusMode, disableFocusMode } from '../lib/focusMode';
+import { getOrCreateDailyStats, updateDailyStats } from '../lib/database';
+import { isToday } from '../utils/dateHelpers';
 
-export type TimerStatus = 'idle' | 'running' | 'paused';
-export type SessionType = 'work' | 'break' | 'longBreak';
+type TimerStatus = 'idle' | 'running' | 'paused';
+
+const TIMER_STATE_KEY = 'pomodoro-timer-state';
 
 interface TimerState {
-  timeRemaining: number; // in seconds
+  timeRemaining: number;
   status: TimerStatus;
   sessionType: SessionType;
   sessionCount: number;
   currentTaskId: number | null;
-  sessionStartTime: Date | null;
+  lastUpdated: number;
 }
 
-const TIMER_STATE_KEY = 'pomodoro_timer_state';
-
-/**
- * Load timer state from localStorage
- */
-function loadTimerState(): TimerState | null {
-  try {
-    const saved = localStorage.getItem(TIMER_STATE_KEY);
-    if (saved) {
-      const state = JSON.parse(saved);
-      // Convert sessionStartTime back to Date if it exists
-      if (state.sessionStartTime) {
-        state.sessionStartTime = new Date(state.sessionStartTime);
-      }
-      return state;
-    }
-  } catch (error) {
-    console.error('Failed to load timer state:', error);
-  }
-  return null;
-}
-
-/**
- * Save timer state to localStorage
- */
-function saveTimerState(state: TimerState): void {
-  try {
-    localStorage.setItem(TIMER_STATE_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.error('Failed to save timer state:', error);
-  }
-}
-
-/**
- * Custom hook for Pomodoro timer logic
- */
-export function usePomodoro() {
-  // Load settings from database
-  const settings = useLiveQuery(() => db.settings.get(1));
-
-  // Load today's sessions for count
-  const todaySessions = useLiveQuery(async () => {
-    const today = getTodayKey();
-    const stats = await db.dailyStats.where('date').equals(today).first();
-    return stats?.completedSessions || 0;
-  });
-
-  // Initialize state from localStorage or defaults
-  const [state, setState] = useState<TimerState>(() => {
-    const saved = loadTimerState();
-    if (saved) {
-      return saved;
-    }
-    return {
-      timeRemaining: 25 * 60, // Default 25 minutes
-      status: 'idle',
-      sessionType: 'work',
-      sessionCount: 0,
-      currentTaskId: null,
-      sessionStartTime: null
-    };
-  });
-
+export const usePomodoro = () => {
+  const { settings } = useSettings();
+  const [timeRemaining, setTimeRemaining] = useState(1500); // 25 minutes default
+  const [status, setStatus] = useState<TimerStatus>('idle');
+  const [sessionType, setSessionType] = useState<SessionType>('work');
+  const [sessionCount, setSessionCount] = useState(0);
+  const [currentTaskId, setCurrentTaskId] = useState<number | null>(null);
+  
   const intervalRef = useRef<number | null>(null);
   const lastTickRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(Date.now());
 
-  // Save state whenever it changes
+  // Load saved timer state on mount
   useEffect(() => {
-    saveTimerState(state);
-  }, [state]);
-
-  // Update settings when they change
-  useEffect(() => {
-    if (settings && state.status === 'idle') {
-      let duration: number;
-      switch (state.sessionType) {
-        case 'work':
-          duration = settings.workDuration * 60;
-          break;
-        case 'break':
-          duration = settings.shortBreakDuration * 60;
-          break;
-        case 'longBreak':
-          duration = settings.longBreakDuration * 60;
-          break;
-      }
-      
-      if (state.timeRemaining !== duration) {
-        setState(prev => ({ ...prev, timeRemaining: duration }));
+    const savedState = localStorage.getItem(TIMER_STATE_KEY);
+    if (savedState) {
+      try {
+        const state: TimerState = JSON.parse(savedState);
+        // Calculate elapsed time since last update
+        const elapsed = Math.floor((Date.now() - state.lastUpdated) / 1000);
+        const newTimeRemaining = Math.max(0, state.timeRemaining - (state.status === 'running' ? elapsed : 0));
+        
+        setTimeRemaining(newTimeRemaining);
+        setStatus(newTimeRemaining > 0 ? state.status : 'idle');
+        setSessionType(state.sessionType);
+        setSessionCount(state.sessionCount);
+        setCurrentTaskId(state.currentTaskId);
+      } catch (error) {
+        console.error('Failed to load timer state:', error);
       }
     }
-  }, [settings, state.status, state.sessionType, state.timeRemaining]);
-
-  // Update page title and favicon
-  useEffect(() => {
-    if (state.status === 'running' || state.status === 'paused') {
-      const timeStr = formatTime(state.timeRemaining);
-      const typeStr = state.sessionType === 'work' ? 'Focus' : 'Break';
-      updatePageTitle(timeStr, typeStr);
-      updateFavicon(state.sessionType);
-    } else {
-      resetPageTitle();
-      updateFavicon('idle');
-    }
-  }, [state.timeRemaining, state.status, state.sessionType]);
-
-  /**
-   * Timer tick function with drift correction
-   */
-  const tick = useCallback(() => {
-    const now = Date.now();
-    const deltaSeconds = Math.floor((now - lastTickRef.current) / 1000);
-    lastTickRef.current = now;
-
-    setState(prev => {
-      const newTime = Math.max(0, prev.timeRemaining - deltaSeconds);
-      
-      if (newTime === 0 && prev.timeRemaining > 0) {
-        // Session completed
-        handleSessionComplete(prev);
-      }
-      
-      return {
-        ...prev,
-        timeRemaining: newTime
-      };
-    });
   }, []);
 
-  /**
-   * Start or resume timer
-   */
-  const start = useCallback(async (taskId?: number) => {
-    if (!settings) return;
-
-    // Request notification permission on first start
-    await requestNotificationPermission();
-
-    setState(prev => {
-      const isNewSession = prev.status === 'idle';
-      
-      return {
-        ...prev,
-        status: 'running',
-        sessionStartTime: isNewSession ? new Date() : prev.sessionStartTime,
-        currentTaskId: taskId !== undefined ? taskId : prev.currentTaskId
-      };
-    });
-
-    // Enable focus mode for work sessions
-    if (state.sessionType === 'work') {
-      await enableFocusMode();
-    }
-
-    // Start interval
-    lastTickRef.current = Date.now();
-    intervalRef.current = window.setInterval(tick, 1000);
-  }, [settings, state.sessionType, tick]);
-
-  /**
-   * Pause timer
-   */
-  const pause = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    setState(prev => ({ ...prev, status: 'paused' }));
-  }, []);
-
-  /**
-   * Reset timer to initial state
-   */
-  const reset = useCallback(async () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    if (!settings) return;
-
-    await disableFocusMode();
-
-    let duration: number;
-    switch (state.sessionType) {
-      case 'work':
-        duration = settings.workDuration * 60;
-        break;
-      case 'break':
-        duration = settings.shortBreakDuration * 60;
-        break;
-      case 'longBreak':
-        duration = settings.longBreakDuration * 60;
-        break;
-    }
-
-    setState(prev => ({
-      ...prev,
-      timeRemaining: duration,
-      status: 'idle',
-      sessionStartTime: null
-    }));
-  }, [settings, state.sessionType]);
-
-  /**
-   * Skip to next session
-   */
-  const skip = useCallback(async () => {
-    if (state.status === 'running' && state.sessionStartTime) {
-      // Save interrupted session
-      await saveSession(state, true);
-    }
-    
-    await switchToNextSession();
-  }, [state]);
-
-  /**
-   * Handle session completion
-   */
-  const handleSessionComplete = useCallback(async (completedState: TimerState) => {
-    // Stop interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    // Save completed session
-    await saveSession(completedState, false);
-
-    // Play sound if enabled
-    if (settings?.soundEnabled) {
-      playNotificationSound();
-    }
-
-    // Show notification
-    if (completedState.sessionType === 'work') {
-      const newCount = (todaySessions || 0) + 1;
-      showWorkCompleteNotification(newCount);
-      
-      // Check if daily goal achieved
-      if (settings && newCount === settings.dailyGoal) {
-        showDailyGoalAchievedNotification(settings.dailyGoal);
-      }
-
-      // Increment task pomodoros if task is assigned
-      if (completedState.currentTaskId) {
-        await incrementTaskPomodoros(completedState.currentTaskId);
-      }
-    } else if (completedState.sessionType === 'break') {
-      showBreakCompleteNotification();
-    } else {
-      showLongBreakCompleteNotification();
-    }
-
-    await disableFocusMode();
-
-    // Switch to next session
-    setTimeout(() => {
-      switchToNextSession();
-    }, 1000);
-  }, [settings, todaySessions]);
-
-  /**
-   * Save session to database
-   */
-  const saveSession = async (sessionState: TimerState, interrupted: boolean): Promise<void> => {
-    if (!sessionState.sessionStartTime || !settings) return;
-
-    const endTime = new Date();
-    const durationMinutes = Math.floor(
-      (endTime.getTime() - sessionState.sessionStartTime.getTime()) / 60000
-    );
-
-    const session: Session = {
-      startTime: sessionState.sessionStartTime,
-      endTime,
-      duration: durationMinutes,
-      type: sessionState.sessionType,
-      taskId: sessionState.currentTaskId || undefined,
-      completed: !interrupted,
-      interrupted
+  // Save timer state whenever it changes
+  useEffect(() => {
+    const state: TimerState = {
+      timeRemaining,
+      status,
+      sessionType,
+      sessionCount,
+      currentTaskId,
+      lastUpdated: Date.now()
     };
+    localStorage.setItem(TIMER_STATE_KEY, JSON.stringify(state));
+  }, [timeRemaining, status, sessionType, sessionCount, currentTaskId]);
 
-    await db.sessions.add(session);
-
-    // Update daily stats
-    if (!interrupted) {
-      await updateDailyStats(getTodayKey(), sessionState.sessionType, durationMinutes);
-    }
-  };
-
-  /**
-   * Increment task completed pomodoros
-   */
-  const incrementTaskPomodoros = async (taskId: number): Promise<void> => {
-    const task = await db.tasks.get(taskId);
-    if (task) {
-      await db.tasks.update(taskId, {
-        completedPomodoros: task.completedPomodoros + 1
-      });
-    }
-  };
-
-  /**
-   * Switch to next session type
-   */
-  const switchToNextSession = useCallback(async () => {
-    if (!settings) return;
-
-    setState(prev => {
-      let nextType: SessionType;
-      let nextCount = prev.sessionCount;
-
-      if (prev.sessionType === 'work') {
-        nextCount += 1;
-        // Check if it's time for long break
-        if (nextCount % settings.sessionsBeforeLongBreak === 0) {
-          nextType = 'longBreak';
-        } else {
-          nextType = 'break';
-        }
-      } else {
-        // After any break, go back to work
-        nextType = 'work';
-      }
-
-      let duration: number;
-      switch (nextType) {
-        case 'work':
-          duration = settings.workDuration * 60;
-          break;
-        case 'break':
-          duration = settings.shortBreakDuration * 60;
-          break;
-        case 'longBreak':
-          duration = settings.longBreakDuration * 60;
-          break;
-      }
-
-      const newState: TimerState = {
-        timeRemaining: duration,
-        status: 'idle',
-        sessionType: nextType,
-        sessionCount: nextCount,
-        currentTaskId: nextType === 'work' ? prev.currentTaskId : null,
-        sessionStartTime: null
-      };
-
-      // Auto-start if enabled
-      if (
-        (nextType === 'work' && settings.autoStartPomodoros) ||
-        (nextType !== 'work' && settings.autoStartBreaks)
-      ) {
-        setTimeout(() => start(), 500);
-      }
-
-      return newState;
-    });
-  }, [settings, start]);
-
-  // Cleanup on unmount
+  // Initialize time remaining based on session type and settings
   useEffect(() => {
+    if (!settings) return;
+    
+    if (status === 'idle') {
+      const duration = sessionType === 'work'
+        ? settings.workDuration
+        : sessionType === 'break'
+        ? settings.shortBreakDuration
+        : settings.longBreakDuration;
+      
+      setTimeRemaining(duration * 60);
+    }
+  }, [sessionType, settings, status]);
+
+  // Timer countdown logic with drift correction
+  useEffect(() => {
+    if (status !== 'running') {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    lastTickRef.current = Date.now();
+    startTimeRef.current = Date.now();
+
+    intervalRef.current = window.setInterval(() => {
+      const now = Date.now();
+      const actualElapsed = Math.floor((now - lastTickRef.current) / 1000);
+      lastTickRef.current = now;
+
+      setTimeRemaining(prev => {
+        const newTime = Math.max(0, prev - actualElapsed);
+        
+        if (newTime === 0) {
+          handleSessionComplete();
+        }
+        
+        return newTime;
+      });
+    }, 1000);
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
+  }, [status]);
+
+  const handleSessionComplete = useCallback(async () => {
+    if (!settings) return;
+
+    // Save session to database
+    const duration = sessionType === 'work'
+      ? settings.workDuration
+      : sessionType === 'break'
+      ? settings.shortBreakDuration
+      : settings.longBreakDuration;
+
+    await db.sessions.add({
+      type: sessionType,
+      duration,
+      completedAt: new Date(),
+      taskId: currentTaskId || undefined
+    });
+
+    // Update daily stats if it's a work session
+    if (sessionType === 'work') {
+      const stats = await getOrCreateDailyStats();
+      await updateDailyStats({
+        completedPomodoros: stats.completedPomodoros + 1,
+        minutesFocused: stats.minutesFocused + duration
+      });
+
+      // Update task pomodoro count
+      if (currentTaskId) {
+        const task = await db.tasks.get(currentTaskId);
+        if (task) {
+          await db.tasks.update(currentTaskId, {
+            completedPomodoros: (task.completedPomodoros || 0) + 1
+          });
+        }
+      }
+    }
+
+    // Show notification
+    const nextSession = getNextSessionType();
+    showNotification(
+      `${sessionType === 'work' ? 'Work' : 'Break'} session complete!`,
+      `Time for ${nextSession === 'work' ? 'a work session' : 'a break'}.`
+    );
+
+    // Auto-start next session if enabled
+    if (settings.autoStartBreak && sessionType === 'work') {
+      setSessionType(nextSession);
+      setStatus('idle');
+      setTimeout(() => setStatus('running'), 1000);
+    } else if (settings.autoStartPomodoro && sessionType !== 'work') {
+      setSessionType(nextSession);
+      setStatus('idle');
+      setTimeout(() => setStatus('running'), 1000);
+    } else {
+      setSessionType(nextSession);
+      setStatus('idle');
+    }
+  }, [sessionType, sessionCount, currentTaskId, settings]);
+
+  const getNextSessionType = useCallback((): SessionType => {
+    if (!settings) return 'break';
+    
+    if (sessionType === 'work') {
+      const nextCount = sessionCount + 1;
+      setSessionCount(nextCount);
+      return nextCount % settings.longBreakInterval === 0 ? 'longBreak' : 'break';
+    }
+    return 'work';
+  }, [sessionType, sessionCount, settings]);
+
+  const start = useCallback((taskId?: number) => {
+    setStatus('running');
+    if (taskId !== undefined) {
+      setCurrentTaskId(taskId);
+    }
+    if (settings?.focusModeEnabled) {
+      enableFocusMode();
+    }
+  }, [settings]);
+
+  const pause = useCallback(() => {
+    setStatus('paused');
+    disableFocusMode();
   }, []);
 
-  // Re-sync timer when page becomes visible (handles tab switching)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && state.status === 'running') {
-        lastTickRef.current = Date.now();
-      }
-    };
+  const reset = useCallback(() => {
+    setStatus('idle');
+    setCurrentTaskId(null);
+    disableFocusMode();
+    
+    if (settings) {
+      const duration = sessionType === 'work'
+        ? settings.workDuration
+        : sessionType === 'break'
+        ? settings.shortBreakDuration
+        : settings.longBreakDuration;
+      
+      setTimeRemaining(duration * 60);
+    }
+  }, [sessionType, settings]);
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [state.status]);
+  const skip = useCallback(() => {
+    setStatus('idle');
+    disableFocusMode();
+    setSessionType(getNextSessionType());
+  }, [getNextSessionType]);
+
+  const formatTime = useCallback((seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   return {
-    timeRemaining: state.timeRemaining,
-    status: state.status,
-    sessionType: state.sessionType,
-    sessionCount: state.sessionCount,
-    currentTaskId: state.currentTaskId,
-    formattedTime: formatTime(state.timeRemaining),
+    timeRemaining,
+    status,
+    sessionType,
+    sessionCount,
+    currentTaskId,
+    formattedTime: formatTime(timeRemaining),
     start,
     pause,
     reset,
     skip,
     settings
   };
-}
+};
