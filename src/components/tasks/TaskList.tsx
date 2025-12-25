@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Search } from 'lucide-react';
 import { Task } from '../../lib/database';
 import { TaskItem } from './TaskItem';
@@ -110,10 +111,11 @@ export const TaskList: React.FC<TaskListProps> = ({
       </div>
 
       {/* Task Form Modal */}
-      {isFormOpen && (
+      {isFormOpen && createPortal(
         <TaskForm
           onClose={() => setIsFormOpen(false)}
-        />
+        />,
+        document.body
       )}
     </div>
   );
