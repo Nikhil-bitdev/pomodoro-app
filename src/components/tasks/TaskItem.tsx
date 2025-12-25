@@ -37,7 +37,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
   return (
     <div
-      className={`group p-5 rounded-2xl border-2 transition-all duration-300 ${
+      className={`group p-3 sm:p-5 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 ${
         isSelected
           ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 shadow-lg shadow-blue-500/20'
           : task.isCompleted
@@ -80,14 +80,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         </div>
       ) : (
         /* View Mode */
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2 sm:gap-3">
           {/* Checkbox */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onComplete();
             }}
-            className={`flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
+            className={`flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
               task.isCompleted
                 ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-500 shadow-green-500/30'
                 : 'border-gray-300 dark:border-gray-600 hover:border-green-500 hover:shadow-lg hover:shadow-green-500/20'
@@ -101,7 +101,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3
-                  className={`font-medium ${
+                  className={`text-sm sm:text-base font-medium ${
                     task.isCompleted
                       ? 'line-through text-gray-500 dark:text-gray-400'
                       : 'text-gray-900 dark:text-white'
@@ -110,7 +110,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   {task.title}
                 </h3>
                 {task.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {task.description}
                   </p>
                 )}

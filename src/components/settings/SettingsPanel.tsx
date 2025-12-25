@@ -59,18 +59,18 @@ export const SettingsPanel: React.FC = () => {
   if (!settings) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl shadow-lg">
-          <SettingsIcon className="text-white" size={28} />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="p-2 sm:p-3 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl sm:rounded-2xl shadow-lg">
+          <SettingsIcon className="text-white" size={24} />
         </div>
-        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">Settings</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">Settings</h2>
       </div>
 
       {/* Timer Settings */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-8">
-        <div className="flex items-center justify-between">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Timer Duration</h3>
           <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-medium">Pomodoro</span>
         </div>
@@ -145,17 +145,17 @@ export const SettingsPanel: React.FC = () => {
         </div>
 
         {/* Sessions Before Long Break */}
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sessions Before Long Break</label>
-            <span className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg text-sm font-bold shadow-md">{settings.sessionsBeforeLongBreak}</span>
+            <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Sessions Before Long Break</label>
+            <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg text-xs sm:text-sm font-bold shadow-md">{settings.sessionsBeforeLongBreak}</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             {[2, 3, 4, 5, 6].map((num) => (
               <button
                 key={num}
                 onClick={() => setSessionsBeforeLongBreak(num)}
-                className={`flex-1 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 ${
+                className={`flex-1 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all transform hover:scale-105 ${
                   settings.sessionsBeforeLongBreak === num
                     ? 'bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -169,10 +169,10 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       {/* Behavior Settings */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Automation</h3>
-          <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium">Auto-start</span>
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Automation</h3>
+          <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs sm:text-sm font-medium">Auto-start</span>
         </div>
 
         {/* Auto-start Breaks */}
@@ -217,10 +217,10 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       {/* Appearance */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Preferences</h3>
-          <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-sm font-medium">UI</span>
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Preferences</h3>
+          <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-xs sm:text-sm font-medium">UI</span>
         </div>
 
         {/* Theme Toggle */}
@@ -267,29 +267,29 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       {/* Goals */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Daily Target</h3>
-          <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full text-sm font-medium">Goal</span>
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Daily Target</h3>
+          <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full text-xs sm:text-sm font-medium">Goal</span>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-2 border-amber-200 dark:border-amber-800">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg sm:rounded-xl border-2 border-amber-200 dark:border-amber-800">
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Daily Pomodoro Goal</div>
-              <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 mt-1">
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Daily Pomodoro Goal</div>
+              <div className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 mt-1">
                 {settings.dailyGoal}
               </div>
             </div>
-            <div className="text-4xl">🎯</div>
+            <div className="text-3xl sm:text-4xl">🎯</div>
           </div>
           
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 sm:gap-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
               <button
                 key={num}
                 onClick={() => setDailyGoal(num)}
-                className={`py-3 rounded-lg font-semibold transition-all transform hover:scale-110 ${
+                className={`py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all transform hover:scale-110 ${
                   settings.dailyGoal === num
                     ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30 scale-110'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -303,13 +303,13 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       {/* Data Management */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Data</h3>
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Data</h3>
 
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <button
             onClick={handleExport}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105"
+            className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold shadow-lg transition-all transform hover:scale-105"
           >
             <Download size={20} />
             Export Data
@@ -317,7 +317,7 @@ export const SettingsPanel: React.FC = () => {
 
           <button
             onClick={handleImport}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105"
+            className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold shadow-lg transition-all transform hover:scale-105"
           >
             <Upload size={20} />
             Import Data
@@ -325,7 +325,7 @@ export const SettingsPanel: React.FC = () => {
 
           <button
             onClick={handleClearData}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105"
+            className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold shadow-lg transition-all transform hover:scale-105"
           >
             <Trash2 size={20} />
             Clear All Data
