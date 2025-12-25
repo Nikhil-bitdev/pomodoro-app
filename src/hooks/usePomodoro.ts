@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { db, SessionType } from '../lib/database';
 import { useSettings } from './useSettings';
 import { showNotification } from '../lib/notifications';
-import { enableFocusMode, disableFocusMode } from '../lib/focusMode';
-import { getOrCreateDailyStats, updateDailyStats } from '../lib/database';
-import { isToday } from '../utils/dateHelpers';
+import { updateDailyStats } from '../lib/database';
+import { getTodayKey } from '../utils/dateHelpers';
 
 type TimerStatus = 'idle' | 'running' | 'paused';
 
@@ -130,17 +129,17 @@ export const usePomodoro = () => {
     await db.sessions.add({
       type: sessionType,
       duration,
-      completedAt: new Date(),
+      startTime: new Date(Date.now() - duration * 60 * 1000),
+      endTime: new Date(),
+      completed: true,
+      interrupted: false,
       taskId: currentTaskId || undefined
     });
 
     // Update daily stats if it's a work session
     if (sessionType === 'work') {
-      const stats = await getOrCreateDailyStats();
-      await updateDailyStats({
-        completedPomodoros: stats.completedPomodoros + 1,
-        minutesFocused: stats.minutesFocused + duration
-      });
+      const today = getTodayKey();
+      await updateDailyStats(today, sessionType, duration);
 
       // Update task pomodoro count
       if (currentTaskId) {
@@ -157,15 +156,18 @@ export const usePomodoro = () => {
     const nextSession = getNextSessionType();
     showNotification(
       `${sessionType === 'work' ? 'Work' : 'Break'} session complete!`,
-      `Time for ${nextSession === 'work' ? 'a work session' : 'a break'}.`
+      {
+        body: `Time for ${nextSession === 'work' ? 'a work session' : 'a break'}.`,
+        icon: '/icon.png'
+      }
     );
 
     // Auto-start next session if enabled
-    if (settings.autoStartBreak && sessionType === 'work') {
+    if (settings.autoStartBreaks && sessionType === 'work') {
       setSessionType(nextSession);
       setStatus('idle');
       setTimeout(() => setStatus('running'), 1000);
-    } else if (settings.autoStartPomodoro && sessionType !== 'work') {
+    } else if (settings.autoStartPomodoros && sessionType !== 'work') {
       setSessionType(nextSession);
       setStatus('idle');
       setTimeout(() => setStatus('running'), 1000);
@@ -181,7 +183,7 @@ export const usePomodoro = () => {
     if (sessionType === 'work') {
       const nextCount = sessionCount + 1;
       setSessionCount(nextCount);
-      return nextCount % settings.longBreakInterval === 0 ? 'longBreak' : 'break';
+      return nextCount % settings.sessionsBeforeLongBreak === 0 ? 'longBreak' : 'break';
     }
     return 'work';
   }, [sessionType, sessionCount, settings]);
@@ -191,20 +193,15 @@ export const usePomodoro = () => {
     if (taskId !== undefined) {
       setCurrentTaskId(taskId);
     }
-    if (settings?.focusModeEnabled) {
-      enableFocusMode();
-    }
-  }, [settings]);
+  }, []);
 
   const pause = useCallback(() => {
     setStatus('paused');
-    disableFocusMode();
   }, []);
 
   const reset = useCallback(() => {
     setStatus('idle');
     setCurrentTaskId(null);
-    disableFocusMode();
     
     if (settings) {
       const duration = sessionType === 'work'
@@ -219,10 +216,9 @@ export const usePomodoro = () => {
 
   const skip = useCallback(() => {
     setStatus('idle');
-    disableFocusMode();
     setSessionType(getNextSessionType());
   }, [getNextSessionType]);
-
+  
   const formatTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

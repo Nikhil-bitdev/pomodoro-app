@@ -30,3 +30,4 @@ lerna-debug.log*
 # PWA
 dev-dist
 .vercel
+.env*.local
