@@ -43,7 +43,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   });
 
   return (
-    <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8">
+    <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 sm:p-6 md:p-8 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">Tasks</h2>
@@ -90,7 +90,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       </div>
 
       {/* Task List */}
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1 overflow-y-auto overscroll-contain -mx-3 sm:mx-0 px-3 sm:px-0">
         {filteredTasks && filteredTasks.length > 0 ? (
           filteredTasks.map((task) => (
             <TaskItem
@@ -115,7 +115,7 @@ export const TaskList: React.FC<TaskListProps> = ({
         <TaskForm
           onClose={() => setIsFormOpen(false)}
         />,
-        document.body
+        document.getElementById('portal-root') || document.body
       )}
     </div>
   );

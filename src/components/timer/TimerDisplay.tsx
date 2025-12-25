@@ -44,14 +44,14 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   return (
     <div className="flex flex-col items-center justify-center">
       {/* Session Type Label */}
-      <div className="mb-3 sm:mb-6 md:mb-8">
-        <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-400 dark:to-pink-400 text-center">
+      <div className="mb-2 sm:mb-6 md:mb-8">
+        <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-400 dark:to-pink-400 text-center">
           {getSessionLabel()}
         </h2>
       </div>
 
       {/* Circular Progress */}
-      <div className="relative w-56 h-56 xs:w-64 xs:h-64 sm:w-80 sm:h-80 md:w-96 md:h-96">
+      <div className="relative w-64 h-64 xs:w-72 xs:h-72 sm:w-80 sm:h-80 md:w-96 md:h-96 mx-auto">
         {/* Background Circle */}
         <svg className="absolute inset-0 transform -rotate-90 drop-shadow-2xl" viewBox="0 0 384 384">
           <circle

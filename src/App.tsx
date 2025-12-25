@@ -74,14 +74,14 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
+    <div className="min-h-screen h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <header className="flex-shrink-0 bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-pink-600 dark:from-red-400 dark:to-pink-400 flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl sm:rounded-2xl shadow-lg">
-                <Timer className="text-white" size={24} />
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-pink-600 dark:from-red-400 dark:to-pink-400 flex items-center gap-1.5 sm:gap-3">
+              <div className="p-1 sm:p-2 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg sm:rounded-2xl shadow-lg">
+                <Timer className="text-white" size={20} />
               </div>
               Pomodoro Focus
             </h1>
@@ -99,21 +99,21 @@ function App() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
+      <nav className="flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8">
+          <div className="flex justify-between sm:justify-start sm:space-x-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold transition-all duration-300 relative ${
+                className={`flex-1 sm:flex-initial shrink-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-semibold transition-all duration-300 relative ${
                   activeTab === id
                     ? 'text-red-600 dark:text-red-400'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
-                <Icon size={18} className="sm:w-5 sm:h-5" />
-                <span className="hidden xs:inline">{label}</span>
+                <Icon size={16} className="sm:w-5 sm:h-5" />
+                <span className="text-[10px] sm:text-sm">{label}</span>
                 {activeTab === id && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-pink-600 rounded-t-full" />
                 )}
@@ -124,10 +124,11 @@ function App() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-8 h-full">
         {activeTab === 'timer' && (
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-8 lg:p-12">
+          <div className="max-w-3xl mx-auto h-full flex flex-col">
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 sm:p-8 lg:p-12 flex-1 flex flex-col justify-center">
               <TimerDisplay
                 time={formattedTime}
                 sessionType={sessionType}
@@ -202,6 +203,7 @@ function App() {
         {activeTab === 'analytics' && <AnalyticsDashboard />}
 
         {activeTab === 'settings' && <SettingsPanel />}
+        </div>
       </main>
     </div>
   );
